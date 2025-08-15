@@ -57,6 +57,24 @@ def fetch_playlist_data():
         response = requests.get(url, headers=headers)
         playlist_dict = json.loads(response.content)
 
+        # The Spotify API limits data requests to 100 tracks per request by default (but can be
+        # set to even fewer). For playlists with a greater number of tracks than the set limit, 
+        # multiple requests are required to get the complete track data.
+        request_limit = playlist_dict['tracks']['limit']
+        total_tracks = playlist_dict['tracks']['total']
+        num_additional_requests = int(total_tracks / request_limit)
+        next_url = playlist_dict['tracks']['next']
+
+        for i in range(0, num_additional_requests):
+            next_response = requests.get(next_url, headers=headers)
+            additional_tracks = json.loads(next_response.content)
+            playlist_dict['tracks']['items'] += additional_tracks['items']
+            next_url = additional_tracks['next']
+        
+        playlist_dict['tracks']['next'] = None
+        playlist_dict['tracks']['offset'] = None
+        playlist_dict['tracks']['total_number_of_requests'] = num_additional_requests + 1
+
         # Format dictionary data to use double-quotes for strings, as required by JSON standards.
         playlist_json_data = json.dumps(playlist_dict)
 

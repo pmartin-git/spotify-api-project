@@ -3,7 +3,7 @@ from airflow.providers.amazon.aws.operators.s3 import S3Hook
 
 import pandas as pd
 import json
-import datetime
+import io
 
 @dag
 def process_playlist_data():
@@ -15,7 +15,8 @@ def process_playlist_data():
 
         s3_response = s3_client.get_object(
             Bucket = 'spotify-api-project-bucket',
-            Key = f'json_files/test_{ds}.json'
+            #Key = f'json_files/test_{ds}.json'
+            Key = 'json_files/test_2025-08-13.json'
         )
 
         s3_object_body = s3_response.get('Body')
@@ -25,22 +26,24 @@ def process_playlist_data():
         return playlist_json_data
     
     @task
-    def dim_playlists(playlist_json_data, ds):
-        dim_playlists = {
+    def create_dim_playlists(playlist_json_data, ds):
+        dim_playlists = [{
             'id': playlist_json_data['id'],
             'name': playlist_json_data['name'],
             'description': playlist_json_data['description'],
             'owner_id': playlist_json_data['owner']['id'],
             'total_tracks': playlist_json_data['tracks']['total'],
             'updated_at': ds
-        }
+        }]
         
         print(dim_playlists)
+        df = pd.DataFrame(dim_playlists)
+        return df
     
     @task
-    def dim_tracks(playlist_json_data, ds):
+    def create_dim_tracks(playlist_json_data, ds):
 
-        playlist_tracks = []
+        playlist_tracks_list = []
         for item in playlist_json_data['tracks']['items']:
             track_data_row = {
                 'track_id': item['track']['id'],
@@ -52,24 +55,91 @@ def process_playlist_data():
                 'track_additional_artists': {},
                 'playlist_id': playlist_json_data['id'],
                 'playlist_name': playlist_json_data['name'],
-                'track_added_to_playlist_at': item['added_at']
+                'track_added_to_playlist_at': item['added_at'],
+                'track_popularity': item['track']['popularity'],
+                'updated_at': ds
             }
 
             # For tracks with multiple artists, store additional artist data together in a group.
             for i in range(1, len(item['track']['album']['artists'])):
                 track_data_row['track_additional_artists'].update({
-                    i: {
+                    str(i + 1): {
                         'track_artist_id': item['track']['album']['artists'][i]['id'],
                         'track_artist_name': item['track']['album']['artists'][i]['name']
                     }
                 })
             
-            playlist_tracks.append(track_data_row)
+            playlist_tracks_list.append(track_data_row)
         
-        print(playlist_tracks)
+        print(playlist_tracks_list)
+        df = pd.DataFrame(playlist_tracks_list)
+        return df
 
+    @task
+    def create_dim_track_artists(playlist_json_data, ds):
+
+        track_artists_list = []
+        for item in playlist_json_data['tracks']['items']:
+            for i in range(0, len(item['track']['album']['artists'])):
+                track_artist_data_row = {
+                    'track_id': item['track']['id'],
+                    'track_name': item['track']['name'],
+                    'track_artist_id': item['track']['album']['artists'][i]['id'],
+                    'track_artist_name': item['track']['album']['artists'][i]['name'],
+                    'track_artist_order': i + 1,
+                    'updated_at': ds
+                }
+
+                track_artists_list.append(track_artist_data_row)
+        
+        print(track_artists_list)
+        df = pd.DataFrame(track_artists_list)
+        return df
+    
+    @task
+    def save_parquet_files_to_s3(dim_playlists, dim_tracks, dim_track_artists, ds):
+        conn = S3Hook(aws_conn_id='AWS_CONN')
+        s3_client = conn.get_conn()
+        dataframes_to_write = {
+            "dim_playlists": dim_playlists,
+            "dim_tracks": dim_tracks,
+            "dim_track_artists": dim_track_artists
+        }
+
+        for df_name, df in dataframes_to_write.items():
+            f = io.BytesIO()
+            df.to_parquet(f)
+            f.seek(0)
+            content = f.read()
+            
+            s3_client.put_object(
+                Body=content, 
+                Bucket="spotify-api-project-bucket", 
+                Key=f"parquet_files/{df_name}_{ds}.parquet"
+            )
+
+        # wr.s3.to_parquet(
+        #     df=dim_playlists, 
+        #     path=f"s3://parquet_files/dim_playlists_{ds}.parquet", 
+        #     boto3_session = s3_client.get_session()
+        # )
+
+        # wr.s3.to_parquet(
+        #     df=dim_tracks, 
+        #     path=f"s3://parquet_files/dim_tracks_{ds}.parquet", 
+        #     boto3_session = s3_client.get_session()
+        # )
+
+        # wr.s3.to_parquet(
+        #     df=dim_track_artists, 
+        #     path=f"s3://parquet_files/dim_track_artists_{ds}.parquet", 
+        #     boto3_session = s3_client.get_session()
+        # )
+    
     playlist_json_data = get_playlist_json_data_from_s3()
-    dim_playlists(playlist_json_data)  
-    dim_tracks(playlist_json_data)
+    dim_playlists = create_dim_playlists(playlist_json_data)  
+    dim_tracks = create_dim_tracks(playlist_json_data)
+    dim_track_artists = create_dim_track_artists(playlist_json_data)
+    save_parquet_files_to_s3(dim_playlists, dim_tracks, dim_track_artists)
 
 process_playlist_data()
