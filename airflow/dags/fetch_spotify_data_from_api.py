@@ -7,9 +7,23 @@ import requests
 import datetime
 from math import ceil
 
+# Set playlist data to import.
 spotify_playlist_ids = {
     'wincing the night away': '1r29zYJJ8SGyx3ZOUm2yTu'
 }
+
+# Function to save dictionary to S3 as JSON file.
+def save_json_file_to_s3(dict, name, ds):
+    
+    # Connection created in Airflow UI.
+    conn = S3Hook(aws_conn_id='AWS_CONN')
+    s3_client = conn.get_conn()
+    
+    s3_client.put_object(
+        Body=json.dumps(dict), # Format dictionary to use double-quotes for strings, as required by JSON standards.
+        Bucket="spotify-api-project-bucket", 
+        Key=f"json_files/{name}_json_data_{ds}.json"
+        )
 
 @dag(
     start_date=datetime.datetime(2025, 8, 1),
@@ -114,19 +128,7 @@ def fetch_spotify_data_from_api():
         return playlist_artist_dict
 
     # Save JSON data to S3. There are two files to save, so create two similar tasks that both use the
-    # following "save_json_file_to_s3" function.
-    def save_json_file_to_s3(dict, name, ds):
-        
-        # Connection created in Airflow UI (more secure method possible?).
-        conn = S3Hook(aws_conn_id='AWS_CONN')
-        s3_client = conn.get_conn()
-        
-        s3_client.put_object(
-            Body=json.dumps(dict), # Format dictionary to use double-quotes for strings, as required by JSON standards.
-            Bucket="spotify-api-project-bucket", 
-            Key=f"json_files/{name}_json_data_{ds}.json"
-            )
-    
+    # "save_json_file_to_s3" function.
     @task
     def save_playlist_json_to_s3(playlist_dict, ds):
         save_json_file_to_s3(playlist_dict, 'playlist', ds)
