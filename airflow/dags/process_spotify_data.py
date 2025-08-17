@@ -6,17 +6,17 @@ import json
 import io
 
 @dag
-def process_playlist_data():
+def process_spotify_data():
     
     @task
-    def get_playlist_json_data_from_s3(ds):
+    def get_playlist_json_from_s3(ds):
         conn = S3Hook(aws_conn_id='AWS_CONN')
         s3_client = conn.get_conn()
 
         s3_response = s3_client.get_object(
             Bucket = 'spotify-api-project-bucket',
             #Key = f'json_files/test_{ds}.json'
-            Key = 'json_files/test_2025-08-13.json'
+            Key = 'json_files/playlist_json_data_2025-08-16.json'
         )
 
         s3_object_body = s3_response.get('Body')
@@ -24,6 +24,23 @@ def process_playlist_data():
         playlist_json_data = json.loads(playlist_json_data_bytes)
         
         return playlist_json_data
+    
+    @task
+    def get_playlist_artist_json_from_s3(ds):
+        conn = S3Hook(aws_conn_id='AWS_CONN')
+        s3_client = conn.get_conn()
+
+        s3_response = s3_client.get_object(
+            Bucket = 'spotify-api-project-bucket',
+            #Key = f'json_files/test_{ds}.json'
+            Key = 'json_files/playlist_artist_json_data_2025-08-16.json'
+        )
+
+        s3_object_body = s3_response.get('Body')
+        playlist_artist_json_data_bytes = s3_object_body.read().decode('utf-8')
+        playlist_artist_json_data = json.loads(playlist_artist_json_data_bytes)
+        
+        return playlist_artist_json_data
     
     @task
     def create_dim_playlists(playlist_json_data, ds):
@@ -36,7 +53,6 @@ def process_playlist_data():
             'updated_at': ds
         }]
         
-        print(dim_playlists)
         df = pd.DataFrame(dim_playlists)
         return df
     
@@ -71,7 +87,6 @@ def process_playlist_data():
             
             playlist_tracks_list.append(track_data_row)
         
-        print(playlist_tracks_list)
         df = pd.DataFrame(playlist_tracks_list)
         return df
 
@@ -92,7 +107,6 @@ def process_playlist_data():
 
                 track_artists_list.append(track_artist_data_row)
         
-        print(track_artists_list)
         df = pd.DataFrame(track_artists_list)
         return df
     
@@ -100,6 +114,7 @@ def process_playlist_data():
     def save_parquet_files_to_s3(dim_playlists, dim_tracks, dim_track_artists, ds):
         conn = S3Hook(aws_conn_id='AWS_CONN')
         s3_client = conn.get_conn()
+        
         dataframes_to_write = {
             "dim_playlists": dim_playlists,
             "dim_tracks": dim_tracks,
@@ -111,35 +126,18 @@ def process_playlist_data():
             df.to_parquet(f)
             f.seek(0)
             content = f.read()
-            
+
             s3_client.put_object(
                 Body=content, 
                 Bucket="spotify-api-project-bucket", 
                 Key=f"parquet_files/{df_name}_{ds}.parquet"
             )
-
-        # wr.s3.to_parquet(
-        #     df=dim_playlists, 
-        #     path=f"s3://parquet_files/dim_playlists_{ds}.parquet", 
-        #     boto3_session = s3_client.get_session()
-        # )
-
-        # wr.s3.to_parquet(
-        #     df=dim_tracks, 
-        #     path=f"s3://parquet_files/dim_tracks_{ds}.parquet", 
-        #     boto3_session = s3_client.get_session()
-        # )
-
-        # wr.s3.to_parquet(
-        #     df=dim_track_artists, 
-        #     path=f"s3://parquet_files/dim_track_artists_{ds}.parquet", 
-        #     boto3_session = s3_client.get_session()
-        # )
     
-    playlist_json_data = get_playlist_json_data_from_s3()
+    playlist_json_data = get_playlist_json_from_s3()
+    playlist_artist_json_data = get_playlist_artist_json_from_s3()
     dim_playlists = create_dim_playlists(playlist_json_data)  
     dim_tracks = create_dim_tracks(playlist_json_data)
     dim_track_artists = create_dim_track_artists(playlist_json_data)
     save_parquet_files_to_s3(dim_playlists, dim_tracks, dim_track_artists)
 
-process_playlist_data()
+process_spotify_data()
