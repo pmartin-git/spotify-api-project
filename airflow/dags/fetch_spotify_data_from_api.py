@@ -5,6 +5,7 @@ import json
 import base64
 import requests
 import datetime
+from math import ceil
 
 spotify_playlist_ids = {
     'wincing the night away': '1r29zYJJ8SGyx3ZOUm2yTu'
@@ -66,7 +67,7 @@ def fetch_spotify_data_from_api():
         # requests are required to get the complete track data.
         request_limit = playlist_dict['tracks']['limit']
         total_tracks = playlist_dict['tracks']['total']
-        num_additional_requests = int(round(total_tracks / request_limit, 0))
+        num_additional_requests = ceil(total_tracks / request_limit) - 1
         next_url = playlist_dict['tracks']['next']
 
         for i in range(0, num_additional_requests):
@@ -95,8 +96,8 @@ def fetch_spotify_data_from_api():
         # The Spotify API allows you to request data for up to 50 artists in a single request.
         # To collect data for more than 50 artists, multiple requests are required.
         total_artist_count = len(playlist_artist_id_list)
-        num_requests = int(round(total_artist_count / 50, 0)) + 1
-        playlist_artist_dict = {"artists": []}
+        num_requests = ceil(total_artist_count / 50)
+        playlist_artist_dict = {'artists': []}
 
         for i in range(0, num_requests):
             track_artist_id_request_list = playlist_artist_id_list[50*i: min(50*(i+1), total_artist_count)]
@@ -108,43 +109,39 @@ def fetch_spotify_data_from_api():
             
             response = requests.get(url, headers=headers)
             additional_artists = json.loads(response.content)
-            playlist_artist_dict["artists"] += additional_artists["artists"]
+            playlist_artist_dict['artists'] += additional_artists['artists']
 
         return playlist_artist_dict
 
-    @task
-    def save_playlist_json_to_s3(playlist_dict, ds):
+    # Save JSON data to S3. There are two files to save, so create two similar tasks that both use the
+    # following "save_json_file_to_s3" function.
+    def save_json_file_to_s3(dict, name, ds):
         
-        # Format dictionary data to use double-quotes for strings, as required by JSON standards.
-        playlist_json_data = json.dumps(playlist_dict)
-
+        # Connection created in Airflow UI (more secure method possible?).
         conn = S3Hook(aws_conn_id='AWS_CONN')
         s3_client = conn.get_conn()
-
+        
         s3_client.put_object(
-            Body=playlist_json_data,
+            Body=json.dumps(dict), # Format dictionary to use double-quotes for strings, as required by JSON standards.
             Bucket="spotify-api-project-bucket", 
-            Key=f"json_files/playlist_json_data_{ds}.json"
-        )
+            Key=f"json_files/{name}_json_data_{ds}.json"
+            )
+    
+    @task
+    def save_playlist_json_to_s3(playlist_dict, ds):
+        save_json_file_to_s3(playlist_dict, 'playlist', ds)
 
     @task
     def save_playlist_artist_json_to_s3(playlist_artist_dict, ds):
-        
-        # Format dictionary data to use double-quotes for strings, as required by JSON standards.
-        playlist_artist_json_data = json.dumps(playlist_artist_dict)
+        save_json_file_to_s3(playlist_artist_dict, 'playlist_artist', ds)
 
-        conn = S3Hook(aws_conn_id='AWS_CONN')
-        s3_client = conn.get_conn()
-        s3_client.put_object(
-            Body=playlist_artist_json_data,
-            Bucket="spotify-api-project-bucket", 
-            Key=f"json_files/playlist_artist_json_data_{ds}.json"
-        )
-
+    # Task order
     airflow_variables = import_airflow_variables()
     token = get_token(airflow_variables)
+
     playlist_dict = get_playlist_data(spotify_playlist_ids['wincing the night away'], token)
     playlist_artist_dict = get_playlist_artist_data(playlist_dict, token)
+
     save_playlist_json_to_s3(playlist_dict)
     save_playlist_artist_json_to_s3(playlist_artist_dict)
 
