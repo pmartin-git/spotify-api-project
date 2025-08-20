@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: stg_dim_tracks
+    description: "A starter dbt model"
+    columns:
+      - name: track_id
+        description: "Spotify track ID. The primary key for this table."
+        data_tests:
+          - unique
+          - not_null
