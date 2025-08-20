@@ -1,13 +1,13 @@
 from airflow.sdk import dag, task, Variable
 from airflow.providers.amazon.aws.operators.s3 import S3Hook
+from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 
 import json
 import base64
 import requests
-import datetime
 from math import ceil
 
-# Set playlist data to import.
+# Set playlist data to import (one of my personal public playlists).
 spotify_playlist_ids = {
     'wincing the night away': '1r29zYJJ8SGyx3ZOUm2yTu'
 }
@@ -16,19 +16,19 @@ spotify_playlist_ids = {
 def save_json_file_to_s3(dict, name, ds):
     
     # Connection created in Airflow UI.
-    conn = S3Hook(aws_conn_id='AWS_CONN')
-    s3_client = conn.get_conn()
-    
+    s3_hook = S3Hook(aws_conn_id='AWS_CONN')
+
+    # Format dictionary to use double-quotes for strings, as required by JSON standards.
+    content = json.dumps(dict)
+
+    s3_client = s3_hook.get_conn()
     s3_client.put_object(
-        Body=json.dumps(dict), # Format dictionary to use double-quotes for strings, as required by JSON standards.
+        Body=content, 
         Bucket="spotify-api-project-bucket", 
         Key=f"json_files/{name}_json_data_{ds}.json"
-        )
+    )
 
-@dag(
-    start_date=datetime.datetime(2025, 8, 1),
-    schedule='0 6 * * *'
-)
+@dag
 def fetch_spotify_data_from_api():
 
     @task
@@ -74,6 +74,13 @@ def fetch_spotify_data_from_api():
         }
         
         response = requests.get(url, headers=headers)
+
+        # Check if the API is available; if not, return error code and possibly other info.
+        if response.status_code != 200:
+            print('API response status code:', response.status_code)
+            if response.status_code == 429:
+                print('Retry after', response.headers.get('Retry-After'), 'seconds')
+        
         playlist_dict = json.loads(response.content)
 
         # The Spotify API limits playlist data requests to 100 tracks per request by default (but 
@@ -90,16 +97,16 @@ def fetch_spotify_data_from_api():
             playlist_dict['tracks']['items'] += additional_tracks['items']
             next_url = additional_tracks['next']
         
-        # Set values for final dictionary that make sense after combining track data.
+        # Remove values that don't make sense after combining track data.
         playlist_dict['tracks']['next'] = None
         playlist_dict['tracks']['offset'] = None
 
-        # Add a key to record total number of requests.
+        # Add key to record total number of requests.
         playlist_dict['tracks']['total_number_of_requests'] = num_additional_requests + 1
 
         return playlist_dict
 
-    @task
+    @task.sensor
     def get_playlist_artist_data(playlist_dict, token):
         
         playlist_artist_id_list = []
@@ -122,8 +129,18 @@ def fetch_spotify_data_from_api():
             }
             
             response = requests.get(url, headers=headers)
+
+            # Check if the API is available; if not, return error code and possibly other info.        
+            if response.status_code != 200:
+                print('API response status code:', response.status_code)
+                if response.status_code == 429:
+                    print('Retry after', response.headers.get('Retry-After'), 'seconds')
+
             additional_artists = json.loads(response.content)
             playlist_artist_dict['artists'] += additional_artists['artists']
+
+        # Add key to record total number of requests.
+        playlist_artist_dict['total_number_of_requests'] = num_requests
 
         return playlist_artist_dict
 
@@ -137,6 +154,11 @@ def fetch_spotify_data_from_api():
     def save_playlist_artist_json_to_s3(playlist_artist_dict, ds):
         save_json_file_to_s3(playlist_artist_dict, 'playlist_artist', ds)
 
+    trigger_downstream_dag = TriggerDagRunOperator(
+        task_id='trigger_downstream_dag',
+        trigger_dag_id='load_spotify_data_into_database'
+    )
+
     # Task order
     airflow_variables = import_airflow_variables()
     token = get_token(airflow_variables)
@@ -144,7 +166,9 @@ def fetch_spotify_data_from_api():
     playlist_dict = get_playlist_data(spotify_playlist_ids['wincing the night away'], token)
     playlist_artist_dict = get_playlist_artist_data(playlist_dict, token)
 
-    save_playlist_json_to_s3(playlist_dict)
-    save_playlist_artist_json_to_s3(playlist_artist_dict)
+    [
+        save_playlist_json_to_s3(playlist_dict),
+        save_playlist_artist_json_to_s3(playlist_artist_dict)
+    ] >> trigger_downstream_dag
 
 fetch_spotify_data_from_api()
