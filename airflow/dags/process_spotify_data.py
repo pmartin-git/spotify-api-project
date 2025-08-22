@@ -25,9 +25,8 @@ def get_json_file_from_s3(name, ds):
     
     return json_data
 
-# Function to save dataframe to S3 as CSV file. Would prefer to save as parquet file, but Amazon
-# RDS free tier Postgres does not include "pq_parquet" (no other free RDS options support 
-# simplified parquet ingestion either).
+# Function to save dataframe to S3 as CSV file (would prefer parquet files, but Amazon has
+# no free RDS options that support streamlined parquet ingestion).
 def save_csv_file_to_s3(df, df_name, ds):
 
     # Connection created in Airflow UI.
@@ -233,6 +232,7 @@ def process_spotify_data():
         df = pd.DataFrame(artist_popularity_list)
         save_csv_file_to_s3(df, 'fact_artist_popularity', ds)
     
+    # Create DAG dependency
     trigger_downstream_dag = TriggerDagRunOperator(
         task_id='trigger_downstream_dag',
         trigger_dag_id='load_spotify_data_into_database'

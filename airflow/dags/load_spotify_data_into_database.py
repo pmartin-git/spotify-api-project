@@ -1,5 +1,4 @@
 from airflow.sdk import dag, task
-# from airflow.providers.standard.sensors.external_task import ExternalTaskSensor
 from airflow.providers.amazon.aws.operators.s3 import S3Hook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
@@ -32,15 +31,6 @@ def load_csv_and_copy_into_postgres(table_name, target_fields, replace_index, ds
 
 @dag
 def load_spotify_data_into_database():
-
-    # check_for_upstream_dag_completion = ExternalTaskSensor(
-    #     task_id='check_for_upstream_dag_completion',
-    #     external_dag_id='process_spotify_data',
-    #     external_task_id='trigger_downstream_dag',
-    #     allowed_states=['success'],
-    #     failed_states=['failed', 'skipped'],
-    #     timeout=600 # seconds
-    # )
 
     @task
     def copy_dim_playlists_into_postgres(ds):
