@@ -1,11 +1,77 @@
 version: 2
 
 models:
+  - name: stg_dim_artist_genres
+    description: Spotify artist data expanded so that artists with multiple genres will appear
+      in multiple rows, one row per genre.
+    columns:
+      - name: table_id
+        description: The generated primary key for this table.
+        tests:
+          - unique
+          - not_null
+  
+  - name: stg_dim_artists
+    description: Spotify artist data.
+    columns:
+      - name: artist_id
+        description: Spotify artist ID. The primary key for this table.
+        tests:
+          - unique
+          - not_null
+  
+  - name: stg_dim_playlists
+    description: Spotify playlist data.
+    columns:
+      - name: playlist_id
+        description: Spotify playlist ID. The primary key for this table.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_dim_track_artists
+    description: Spotify track data expanded so that tracks with multiple artists will appear
+      in multiple rows, one row per artist.
+    columns:
+      - name: table_id
+        description: The generated primary key for this table.
+        tests:
+          - unique
+          - not_null
+
   - name: stg_dim_tracks
-    description: "A starter dbt model"
+    description: Spotify track data.
     columns:
       - name: track_id
-        description: "Spotify track ID. The primary key for this table."
-        data_tests:
+        description: Spotify track ID. The primary key for this table.
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_fact_artist_popularity
+    description: Daily Spotify artist popularity and follower data.
+    columns:
+      - name: table_id
+        description: The generated primary key for this table.
+        tests:
+          - unique
+          - not_null
+
+
+  - name: stg_fact_playlist_popularity_and_size
+    description: Daily Spotify playlist total tracks and follower data.
+    columns:
+      - name: table_id
+        description: The generated primary key for this table.
+        tests:
+          - unique
+          - not_null
+  
+  - name: stg_fact_track_popularity
+    description: Daily Spotify track popularity data.
+    columns:
+      - name: table_id
+        description: The generated primary key for this table.
+        tests:
           - unique
           - not_null

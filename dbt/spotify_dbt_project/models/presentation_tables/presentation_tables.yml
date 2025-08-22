@@ -1,0 +1,12 @@
+version: 2
+
+models:
+  - name: track_genre_summary_t1
+    description: Summary of genre parent categories, including total number per category per playlist
+      and breakdown of which genres each category represents. 
+    columns:
+      - name: table_id
+        description: The primary key for this table.
+        tests:
+          - unique
+          - not_null

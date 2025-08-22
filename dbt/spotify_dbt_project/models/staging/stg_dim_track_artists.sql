@@ -18,5 +18,8 @@ renamed as (
 
 )
 
-select * from renamed
+select 
+    {{ dbt_utils.generate_surrogate_key(['track_id', 'track_artist_id']) }} as table_id,
+    *
+from renamed
 

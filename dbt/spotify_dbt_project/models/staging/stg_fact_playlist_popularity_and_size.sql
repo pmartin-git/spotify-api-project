@@ -17,5 +17,8 @@ renamed as (
 
 )
 
-select * from renamed
+select 
+    {{ dbt_utils.generate_surrogate_key(['playlist_id', 'date']) }} as table_id,
+    * 
+from renamed
 
