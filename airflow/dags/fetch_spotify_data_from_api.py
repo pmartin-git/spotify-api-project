@@ -7,6 +7,7 @@ import base64
 import requests
 import logging
 import sys
+import time
 from math import ceil
 
 # Create logger object scoped to this dag file.
@@ -66,7 +67,7 @@ def fetch_spotify_data_from_api():
     @task
     def get_token(airflow_variables):
         
-        # The Spotify API requires a base-64 authentication string to receive token.
+        # Spotify Web API requires a base-64 authentication string to request token.
         auth_string = airflow_variables["CLIENT_ID"] + ":" + airflow_variables["CLIENT_SECRET"]
         auth_bytes = auth_string.encode('utf-8')
         auth_base64 = str(base64.b64encode(auth_bytes), 'utf-8')
@@ -81,6 +82,11 @@ def fetch_spotify_data_from_api():
         }
 
         response = requests.post(url, headers=headers, data=data)
+
+        # Spotify Web API imposes strict rate limits, so pause for 30 seconds after each request.
+        print("Pausing for 30 seconds after API request...")
+        time.sleep(30)
+
         response_json = json.loads(response.content)
         token = response_json['access_token']
 
@@ -98,6 +104,10 @@ def fetch_spotify_data_from_api():
 
         # Check if the API is available; if not, return error code and possibly other info.
         check_api_availability(response)
+
+        # Spotify Web API imposes strict rate limits, so pause for 30 seconds after each request.
+        print("Pausing for 30 seconds after API request...")
+        time.sleep(30)
         
         playlist_dict = json.loads(response.content)
 
@@ -114,6 +124,10 @@ def fetch_spotify_data_from_api():
             
             # Check if the API is available; if not, return error code and possibly other info.
             check_api_availability(response)
+
+            # Spotify Web API imposes strict rate limits, so pause for 30 seconds after each request.
+            print("Pausing for 30 seconds after API request...")
+            time.sleep(30)
             
             additional_tracks = json.loads(next_response.content)
             playlist_dict['tracks']['items'] += additional_tracks['items']
@@ -155,6 +169,10 @@ def fetch_spotify_data_from_api():
 
             # Check if the API is available; if not, return error code and possibly other info.
             check_api_availability(response)
+
+            # Spotify Web API imposes strict rate limits, so pause for 30 seconds after each request.
+            print("Pausing for 30 seconds after API request...")
+            time.sleep(30)
 
             additional_artists = json.loads(response.content)
             playlist_artist_dict['artists'] += additional_artists['artists']
