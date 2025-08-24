@@ -72,11 +72,21 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+
+    # Add dbt env variables
+    DBT_HOST: ${DBT_HOST}
+    DBT_PORT: ${DBT_PORT}
+    LOCAL_DBT_USER: ${LOCAL_DBT_USER}
+    LOCAL_DBT_USER_PASS: ${LOCAL_DBT_USER_PASS}
+    PROD_DBT_USER: ${PROD_DBT_USER}
+    PROD_DBT_USER_PASS: ${PROD_DBT_USER_PASS}
+
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/opt/airflow/dbt
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -278,7 +288,7 @@ services:
         echo
         echo "Change ownership of files in shared volumes to ${AIRFLOW_UID}:0"
         echo
-        chown -v -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config}
+        chown -v -R "${AIRFLOW_UID}:0" /opt/airflow/{logs,dags,plugins,config,dbt}
         echo
         echo "Files in shared volumes:"
         echo
