@@ -1,15 +1,12 @@
-Welcome to your new dbt project!
-
-### Using the starter project
-
-Try running the following commands:
-- dbt run
-- dbt test
-
-
-### Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
+**Postgres DDL for creating local dbt user (vs. production user)**
+REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+CREATE ROLE localdbt;
+GRANT CONNECT ON DATABASE postgres TO localdbt;
+GRANT USAGE ON SCHEMA local_dbt_builds, spotify_sources, spotify_staging, spotify_intermediate, spotify_presentation TO localdbt;
+GRANT CREATE ON SCHEMA local_dbt_builds TO localdbt;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA local_dbt_builds TO localdbt;
+ALTER DEFAULT PRIVILEGES IN SCHEMA local_dbt_builds GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO localdbt;
+GRANT SELECT ON ALL TABLES IN SCHEMA spotify_sources, spotify_staging, spotify_intermediate, spotify_presentation TO localdbt;
+ALTER DEFAULT PRIVILEGES IN SCHEMA spotify_sources, spotify_staging, spotify_intermediate, spotify_presentation GRANT SELECT ON TABLES TO localdbt;
+CREATE USER <local_dbt_user> WITH PASSWORD <password>;
+GRANT localdbt TO <local_dbt_user>;

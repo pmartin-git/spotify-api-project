@@ -1,5 +1,6 @@
-Source table DDL for Postgres (pipeline endpoints):
+This Airflow project populates tables in an Amazon RDS Postgres database with data pulled from the Spotify Web API. The relevant table DDL is below.
 
+**Postgres table creation DDL**
 CREATE TABLE spotify_sources.dim_artists (
 	artist_id varchar NULL,
 	artist_name varchar NULL,
