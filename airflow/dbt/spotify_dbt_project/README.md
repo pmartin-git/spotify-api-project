@@ -1,4 +1,4 @@
-**Postgres DDL for creating local dbt user (vs. production user)**
+**Postgres DDL for creating local dbt user (vs. production user for CI/CD)**
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 CREATE ROLE localdbt;
 GRANT CONNECT ON DATABASE postgres TO localdbt;
