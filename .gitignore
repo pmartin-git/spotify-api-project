@@ -1,0 +1,8 @@
+.env
+__pycache__
+ubuntu-airflow-key-pair.pem
+airflow/config
+airflow/logs
+airflow/plugins
+airflow/dbt/global_dbt_packages
+airflow/dbt/logs
