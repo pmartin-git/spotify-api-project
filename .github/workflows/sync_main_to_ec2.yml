@@ -20,9 +20,9 @@ jobs:
         run: |
           echo '$SSH_KEY' > ssh_key
           chmod 644 ssh_key
-          rsync -avr --delete \
+          rsync -avPr --delete \
             -e 'ssh -i . -p 22 -o StrictHostKeyChecking=no' \
             --exclude 'ssh_key' \
             --exclude '/*.env/' \
             --exclude '*.env' \
-            '$EC2_USER@$EC2_HOST:$TARGET_DIR'
+            '$EC2_USER'@'$EC2_HOST':'$TARGET_DIR'
