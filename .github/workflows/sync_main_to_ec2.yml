@@ -19,9 +19,9 @@ jobs:
           TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
         run: |
           echo '$SSH_KEY' > ssh_key
-          chmod 600 ./ssh_key
+          chmod 600 ssh_key
           rsync -avr --delete \
-            -e 'ssh -i ./ -p 22 -o StrictHostKeyChecking=no' \
+            -e 'ssh -i $GITHUB_WORKSPACE -p 22 -o StrictHostKeyChecking=no' \
             --exclude '/ssh_key' \
             --exclude '/*.env/' \
             --exclude '*.env' \
