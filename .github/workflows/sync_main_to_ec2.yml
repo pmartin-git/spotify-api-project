@@ -21,7 +21,7 @@ jobs:
           cd $GITHUB_WORKSPACE
           echo '$SSH_KEY' > ssh_key.pem
           chmod 600 ssh_key.pem
-          rsync --delete \
+          rsync -avr --delete \
             -e 'ssh -i $GITHUB_WORKSPACE -p 22 -o StrictHostKeyChecking=no' \
             --exclude 'ssh_key.pem' \
             --exclude '.env' \
