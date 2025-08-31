@@ -25,4 +25,4 @@ jobs:
             --exclude 'ssh_key' \
             --exclude '/*.env/' \
             --exclude '*.env' \
-            '$EC2_USER'@'$EC2_HOST':'$TARGET_DIR'
+            $EC2_USER@$EC2_HOST:$TARGET_DIR
