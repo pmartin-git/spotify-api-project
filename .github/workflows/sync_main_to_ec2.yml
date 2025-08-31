@@ -1,0 +1,28 @@
+name: Sync main branch code to EC2
+on:
+  workflow_dispatch:
+  push:
+    branches: main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v4
+      - name: Install rsync
+        run: sudo apt install rsync
+      - name: Sync to EC2
+        env:
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST_DNS}}
+          EC2_USER: ${{ secrets.EC2_USERNAME }}
+          TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
+        run: |
+          echo '$SSH_KEY' > ssh_key.pem
+          chmod 600 ssh_key.pem
+          rsync --delete \
+            -e 'ssh -i $GITHUB_WORKSPACE -p 22 -o StrictHostKeyChecking=no' \
+            --exclude 'ssh_key.pem' \
+            --exclude '.env' \
+            ./ $EC2_USER@$EC2_HOST:$TARGET_DIR
