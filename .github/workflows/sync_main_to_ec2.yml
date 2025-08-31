@@ -9,10 +9,6 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v5
-      - name: Message
-        run: |
-          echo '${{ env.GITHUB_WORKSPACE }}'
-          ls
       - name: Install rsync
         run: sudo apt install rsync
       - name: Sync to EC2
@@ -25,8 +21,8 @@ jobs:
           echo '$SSH_KEY' > ssh_key
           chmod 644 ssh_key
           rsync -avr --delete \
-            -e 'ssh -i /$GITHUB_WORKSPACE -p 22 -o StrictHostKeyChecking=no' \
-            --exclude '/ssh_key' \
+            -e 'ssh -i . -p 22 -o StrictHostKeyChecking=no' \
+            --exclude 'ssh_key' \
             --exclude '/*.env/' \
             --exclude '*.env' \
-            ./ $EC2_USER@$EC2_HOST:$TARGET_DIR
+            ./ '$EC2_USER@$EC2_HOST:$TARGET_DIR'
