@@ -9,6 +9,10 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v5
+      - name: Message
+        run: |
+          echo '$GITHUB_WORKSPACE'
+          ls
       - name: Install rsync
         run: sudo apt install rsync
       - name: Sync to EC2
