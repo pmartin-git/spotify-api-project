@@ -21,8 +21,8 @@ jobs:
           echo '$SSH_KEY' > ssh_key.pem
           chmod 600 ssh_key.pem
           rsync -avPr --delete \
-            -e 'ssh -i . -p 22 -o StrictHostKeyChecking=no' \
-            --exclude 'ssh_key' \
+            -e 'ssh -i ssh_key.pem -p 22 -o StrictHostKeyChecking=no' \
+            --exclude 'ssh_key.pem' \
             --exclude '/*.env/' \
             --exclude '*.env' \
-            $EC2_USER@$EC2_HOST:$TARGET_DIR
+            . $EC2_USER@$EC2_HOST:$TARGET_DIR
