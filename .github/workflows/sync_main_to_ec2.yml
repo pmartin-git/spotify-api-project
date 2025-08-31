@@ -18,10 +18,10 @@ jobs:
           EC2_USER: ${{ secrets.EC2_USERNAME }}
           TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
         run: |
-          echo '$SSH_KEY' > ssh_key
-          chmod 600 ssh_key
+          echo '$SSH_KEY' > ssh_key.pem
+          chmod 600 ssh_key.pem
           rsync -avPr --delete \
-            -e 'ssh -i ssh_key -p 22 -o StrictHostKeyChecking=no' \
+            -e 'ssh -i . -p 22 -o StrictHostKeyChecking=no' \
             --exclude 'ssh_key' \
             --exclude '/*.env/' \
             --exclude '*.env' \
