@@ -21,7 +21,7 @@ jobs:
           echo '$SSH_KEY' > ssh_key
           chmod 644 ssh_key
           rsync -avPr --delete \
-            -e 'ssh -i . -p 22 -o StrictHostKeyChecking=no' \
+            -e 'ssh -i ssh_key -p 22 -o StrictHostKeyChecking=no' \
             --exclude 'ssh_key' \
             --exclude '/*.env/' \
             --exclude '*.env' \
