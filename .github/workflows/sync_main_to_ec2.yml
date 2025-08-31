@@ -19,7 +19,7 @@ jobs:
           TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
         run: |
           echo '$SSH_KEY' > ssh_key
-          chmod 644 ssh_key
+          chmod 600 ssh_key
           rsync -avPr --delete \
             -e 'ssh -i ssh_key -p 22 -o StrictHostKeyChecking=no' \
             --exclude 'ssh_key' \
