@@ -19,5 +19,5 @@ jobs:
             -e 'ssh -i ssh_key.pem -p 22 -o StrictHostKeyChecking=no' \
             --exclude 'ssh_key.pem' \
             --exclude '*.env' \
-            --exclude '/airflow/dbt/spotify_dbt_project/profile.yml' \
+            --exclude '/airflow/dbt/spotify_dbt_project/profiles.yml' \
             . ${{secrets.EC2_USERNAME}}@${{secrets.EC2_HOST_DNS}}:${{secrets.EC2_TARGET_DIR}}
