@@ -3,6 +3,7 @@ select
     track_genres.playlist_id,
     track_genres.playlist_name,
     track_genres.track_id,
+    track_genres.track_artist_id,
     track_genres.track_genre,
     coalesce(genre_categories.genre_category, '(uncategorized)') as genre_category,
     current_timestamp as table_created_at

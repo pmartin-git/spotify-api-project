@@ -15,8 +15,7 @@ def get_json_file_from_s3(name, ds):
     s3_client = s3_hook.get_conn()
     s3_response = s3_client.get_object(
         Bucket='spotify-api-project-bucket',
-        # Key=f'json_files/{name}_json_data_{ds}.json'
-        Key=f'json_files/{name}_json_data_2025-08-18.json'
+        Key=f'json_files/{name}_json_data_{ds}.json'
     )
 
     s3_object_body = s3_response.get('Body')
@@ -42,8 +41,7 @@ def save_csv_file_to_s3(df, df_name, ds):
     s3_client.put_object(
         Body=content, 
         Bucket="spotify-api-project-bucket", 
-        # Key=f"csv_files/{df_name}_{ds}.csv"
-        Key=f"csv_files/{df_name}_2025-08-18.csv"
+        Key=f"csv_files/{df_name}_{ds}.csv"
     )
 
 @dag

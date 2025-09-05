@@ -20,6 +20,7 @@ select
     playlist_name,
     track_id,
     track_genre,
+    track_artist_id,
     table_created_at
 from
     genres_joined

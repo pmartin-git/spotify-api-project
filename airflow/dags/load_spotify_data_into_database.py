@@ -1,6 +1,7 @@
 from airflow.sdk import dag, task
 from airflow.providers.amazon.aws.operators.s3 import S3Hook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 
 import pandas as pd
 
@@ -14,7 +15,7 @@ def load_csv_and_copy_into_postgres(table_name, target_fields, replace_index, ds
     s3_client = s3_hook.get_conn()
     s3_response = s3_client.get_object(
         Bucket='spotify-api-project-bucket',
-        Key=f'csv_files/{table_name}_2025-08-18.csv'
+        Key=f'csv_files/{table_name}_{ds}.csv'
     )
     
     s3_object_body = s3_response.get('Body')
@@ -164,14 +165,22 @@ def load_spotify_data_into_database():
         ]
         load_csv_and_copy_into_postgres('fact_artist_popularity', target_fields, replace_index, ds)
 
+    # Create DAG dependency
+    trigger_downstream_dag = TriggerDagRunOperator(
+        task_id='trigger_downstream_dag',
+        trigger_dag_id='run_dbt_project'
+    )
+
     # Task order
-    copy_dim_playlists_into_postgres(),
-    copy_fact_playlist_popularity_and_size_into_postgres(),
-    copy_dim_tracks_into_postgres(),
-    copy_dim_track_artists_into_postgres(),
-    copy_fact_track_popularity_into_postgres(),
-    copy_dim_artists_into_postgres(),
-    copy_dim_artist_genres_into_postgres(),
-    copy_fact_artist_popularity_into_postgres()
+    [
+        copy_dim_playlists_into_postgres(),
+        copy_fact_playlist_popularity_and_size_into_postgres(),
+        copy_dim_tracks_into_postgres(),
+        copy_dim_track_artists_into_postgres(),
+        copy_fact_track_popularity_into_postgres(),
+        copy_dim_artists_into_postgres(),
+        copy_dim_artist_genres_into_postgres(),
+        copy_fact_artist_popularity_into_postgres()
+    ] >> trigger_downstream_dag
 
 load_spotify_data_into_database()

@@ -8,6 +8,7 @@ import requests
 import logging
 import sys
 import time
+from datetime import datetime
 from math import ceil
 
 # Create logger object scoped to this dag file.
@@ -50,7 +51,12 @@ def save_json_file_to_s3(dict, name, ds):
         Key=f"json_files/{name}_json_data_{ds}.json"
     )
 
-@dag
+@dag(
+    start_date=datetime(2025, 9, 1),
+    schedule_interval="0 7 * * *", # 7:00 AM daily (server timezone)
+    email=['p.martin.9089@gmail.com'],
+    email_on_failure=True
+)
 def fetch_spotify_data_from_api():
 
     @task

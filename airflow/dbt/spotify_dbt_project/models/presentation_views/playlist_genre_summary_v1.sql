@@ -5,4 +5,4 @@ select
     genre_category_pct,
     genre_category_sub_genres
 from
-    {{ ref('track_genre_summary_t1') }}
+    {{ ref('playlist_genre_summary_t1') }}

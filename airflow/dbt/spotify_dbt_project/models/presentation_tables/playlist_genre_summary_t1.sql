@@ -7,4 +7,4 @@ select
     genre_category_sub_genres,
     current_timestamp as table_created_at
 from
-    {{ ref('int_track_genre_categories__aggregated') }}
+    {{ ref('int_playlist_genre_categories__aggregated') }}

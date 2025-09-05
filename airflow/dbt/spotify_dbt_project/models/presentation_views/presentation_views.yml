@@ -1,6 +1,14 @@
 version: 2
 
 models:
-  - name: track_genre_summary_v1
-    description: Summary of genre parent categories, including total number per category per playlist
-      and breakdown of which genres each category represents. 
+  - name: artist_genre_and_popularity_summary_v1
+    description: Summary of playlist artists, including latest popularity score (from Spotify)
+      and breakdown of artist genre categories and sub-genres.
+
+  - name: playlist_genre_summary_v1
+    description: Summary of genre parent categories, including total percent representation 
+      per playlist and breakdown of which sub-genres each category represents.
+
+  - name: track_genre_and_popularity_summary_v1
+    description: Summary of playlist tracks, including latest popularity score (from Spotify)
+      and breakdown of track genre categories and sub-genres.

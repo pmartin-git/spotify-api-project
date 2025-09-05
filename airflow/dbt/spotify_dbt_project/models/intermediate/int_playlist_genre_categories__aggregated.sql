@@ -4,9 +4,9 @@ with genre_categories_aggregated as (
         genre_category,
         genre_category_count,
         total_genres_count,
-        array_agg(track_genre ORDER BY track_genre) as genre_category_sub_genres
+        array_agg(distinct track_genre order by track_genre) as genre_category_sub_genres
     from
-        {{ ref('int_track_genres__aggregated') }}
+        {{ ref('int_playlist_genres__aggregated') }}
     group by
         playlist_name,
         genre_category,

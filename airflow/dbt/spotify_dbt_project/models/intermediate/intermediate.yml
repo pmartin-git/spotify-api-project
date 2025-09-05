@@ -1,7 +1,16 @@
 version: 2
 
 models:
-  - name: int_track_genre_categories__aggregated
+  - name: int_artist_genres__aggregated
+    description: Aggregate genre parent categories across artists (based on playlist).
+    columns:
+      - name: artist_id
+        description: The primary key for this table.
+        tests:
+          - unique
+          - not_null
+
+  - name: int_playlist_genre_categories__aggregated
     description: Aggregate genre parent categories across playlists.
     columns:
       - name: table_id
@@ -10,7 +19,7 @@ models:
           - unique
           - not_null
 
-  - name: int_track_genres__aggregated
+  - name: int_playlist_genres__aggregated
     description: Aggregate genres across playlists.
     columns:
       - name: table_id
@@ -19,8 +28,17 @@ models:
           - unique
           - not_null
 
+  - name: int_track_genres__aggregated
+    description: Aggregate genre parent categories across tracks (based on playlist).
+    columns:
+      - name: track_id
+        description: The primary key for this table.
+        tests:
+          - unique
+          - not_null
+
   - name: int_track_genres__categorized
-    description: Categorize genres into parent categories (based on playlist).
+    description: Categorize track genres into parent categories (based on playlist).
     columns:
       - name: table_id
         description: The primary key for this table.
@@ -29,7 +47,8 @@ models:
           - not_null
 
   - name: int_track_genres_from_artists__joined
-    description: Track genres determined by joining every artist per track and every genre per artist.
+    description: Track genres determined by joining every artist per track and every genre per 
+      artist.
     columns:
       - name: table_id
         description: The generated primary key for this table.
