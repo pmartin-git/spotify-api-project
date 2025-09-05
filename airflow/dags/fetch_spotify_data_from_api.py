@@ -51,11 +51,15 @@ def save_json_file_to_s3(dict, name, ds):
         Key=f"json_files/{name}_json_data_{ds}.json"
     )
 
+default_args = {
+    'email': ['p.martin.9089@gmail.com'],
+    'email_on_failure': True
+}
+
 @dag(
     start_date=datetime(2025, 9, 1),
     schedule="0 7 * * *", # 7:00 AM daily (server timezone)
-    email=['p.martin.9089@gmail.com'],
-    email_on_failure=True
+    default_args=default_args
 )
 def fetch_spotify_data_from_api():
 
