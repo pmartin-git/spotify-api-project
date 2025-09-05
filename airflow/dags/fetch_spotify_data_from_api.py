@@ -152,7 +152,7 @@ def fetch_spotify_data_from_api():
 
         return playlist_dict
 
-    @task.sensor
+    @task
     def get_playlist_artist_data(playlist_dict, token):
         
         playlist_artist_id_list = []
