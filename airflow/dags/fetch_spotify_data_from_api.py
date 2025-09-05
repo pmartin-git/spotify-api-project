@@ -53,7 +53,7 @@ def save_json_file_to_s3(dict, name, ds):
 
 @dag(
     start_date=datetime(2025, 9, 1),
-    schedule_interval="0 7 * * *", # 7:00 AM daily (server timezone)
+    schedule="0 7 * * *", # 7:00 AM daily (server timezone)
     email=['p.martin.9089@gmail.com'],
     email_on_failure=True
 )
