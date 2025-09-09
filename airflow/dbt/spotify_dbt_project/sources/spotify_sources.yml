@@ -1,0 +1,50 @@
+version: 2
+
+sources:
+  - name: spotify
+    schema: spotify_sources
+    loader: Airflow
+    description: Data tables created from raw outputs fetched from Spotify Web API and loaded 
+      using Airflow.
+    tables:
+      - name: dim_artist_genres
+        description: Spotify artist data expanded so that artists with multiple genres will appear
+          in multiple rows, one row per genre.
+        tests:
+        - not_empty
+  
+      - name: dim_artists
+        description: Spotify artist data.
+        tests:
+        - not_empty    
+
+      - name: dim_playlists
+        description: Spotify playlist data.
+        tests:
+        - not_empty
+
+      - name: dim_track_artists
+        description: Spotify track data expanded so that tracks with multiple artists will appear
+          in multiple rows, one row per artist.
+        tests:
+        - not_empty
+
+      - name: dim_tracks
+        description: Spotify track data.
+        tests:
+        - not_empty
+        
+      - name: fact_artist_popularity
+        description: Daily Spotify artist popularity and follower data.
+        tests:
+        - not_empty
+      
+      - name: fact_playlist_popularity_and_size
+        description: Daily Spotify playlist total tracks and follower data.
+        tests:
+        - not_empty 
+        
+      - name: fact_track_popularity
+        description: Daily Spotify track popularity data.
+        tests:
+        - not_empty

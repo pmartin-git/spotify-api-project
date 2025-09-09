@@ -1,14 +1,6 @@
-.env
-__pycache__
-ubuntu-airflow-key-pair.pem
-
-airflow/config
-airflow/logs
-
 airflow/dbt/logs
 airflow/dbt/global_dbt_packages
 
-airflow/dbt/spotify_dbt_project/profiles.yml
 airflow/dbt/spotify_dbt_project/target
 airflow/dbt/spotify_dbt_project/dbt_packages
 airflow/dbt/spotify_dbt_project/logs

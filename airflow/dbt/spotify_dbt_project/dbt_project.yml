@@ -8,15 +8,24 @@ version: '1.0.0'
 # This setting configures which "profile" dbt uses for this project.
 profile: 'spotify_dbt_project'
 
+# Disable creation of .user.yml file / opt out of event tracking.
+flags:   
+  send_anonymous_usage_stats: False
+
 # These configurations specify where dbt should look for different types of files.
 # The `model-paths` config, for example, states that models in this project can be
 # found in the "models/" directory. You probably won't need to change these!
-model-paths: ["models"]
-analysis-paths: ["analyses"]
-test-paths: ["tests"]
-seed-paths: ["seeds"]
-macro-paths: ["macros"]
-snapshot-paths: ["snapshots"]
+model-paths: [models, sources]
+analysis-paths: [analyses]
+test-paths: [tests]
+seed-paths: [seeds]
+snapshot-paths: [snapshots]
+
+# Target dbt package installs to global dbt packages directory.
+packages-install-path: ../global_dbt_packages
+
+# Add path to global dbt macros.
+macro-paths: [macros, ../global_dbt_macros]
 
 clean-targets:         # directories to be removed by `dbt clean`
   - "target"
@@ -32,5 +41,13 @@ clean-targets:         # directories to be removed by `dbt clean`
 models:
   spotify_dbt_project:
     # Config indicated by + and applies to all files under models/example/
-    example:
+    +materialized: table
+    staging:
+      +schema: spotify_staging
+    intermediate:
+      +schema: spotify_intermediate
+    presentation_tables:
+      +schema: spotify_presentation
+    presentation_views:
+      +schema: spotify_presentation
       +materialized: view

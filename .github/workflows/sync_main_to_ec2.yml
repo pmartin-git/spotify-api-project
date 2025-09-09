@@ -1,0 +1,25 @@
+name: Sync main branch to EC2
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get code
+        uses: actions/checkout@v5
+      - name: Install rsync
+        run: sudo apt install rsync
+      - name: Sync to EC2
+        run: |
+          echo "${{secrets.EC2_SSH_KEY}}" > ssh_key.pem
+          chmod 600 ssh_key.pem
+          rsync -avPr --delete \
+            -e 'ssh -i ssh_key.pem -p 22 -o StrictHostKeyChecking=no' \
+            --exclude 'ssh_key.pem' \
+            --exclude '*.env' \
+            --exclude '/airflow/dbt/spotify_dbt_project/profiles.yml' \
+            . ${{secrets.EC2_USERNAME}}@${{secrets.EC2_HOST_DNS}}:${{secrets.EC2_TARGET_DIR}}
