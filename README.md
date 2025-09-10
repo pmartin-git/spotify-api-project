@@ -16,17 +16,17 @@ The code in this repo is written to accomplish the following:
 Code snippets that are not part of the repo code itself are included in various README.md files throughout for posterity and personal reference.
 
 &nbsp;
+### Code Summary:
+
+This pull request provides a simple summary of development: https://github.com/pmartin-git/spotify-api-project/pull/1/files
+
+&nbsp;
 ### Results:
 
 Some basic results can be seen here: https://docs.google.com/spreadsheets/d/1Ij26YOzTuDL3AHKUA4rTUvFLf4R1w9BN/edit?usp=drive_link&ouid=118279630434716919521&rtpof=true&sd=true
 
 Refs: \
 [1] https://rowzero.io/blog/connect-postgresql-to-microsoft-excel
-
-&nbsp;
-### Code Summary:
-
-This pull request provides a simple summary of development: https://github.com/pmartin-git/spotify-api-project/pull/1/files
 
 &nbsp;
 ### Tech Details:
